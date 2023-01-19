@@ -73,11 +73,6 @@ st.dataframe(df_selection)
 
 
 
-
-
-
-
-
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
