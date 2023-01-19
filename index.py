@@ -8,7 +8,7 @@ layout ="wide",
 initial_sidebar_state="expanded")
 
 df = pd.read_excel(
-    io='E:\Laboratory\Experiment Room 2\Streamlit\DataSource\Digipay_transaksi.xlsx',
+    io='Digipay_transaksi.xlsx',
     engine='openpyxl',
     sheet_name='Sheet1',
     skiprows=0,
