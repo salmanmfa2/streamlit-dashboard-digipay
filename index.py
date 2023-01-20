@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import numpy as np
 
 st.set_page_config(page_title="Dashboard Digipay",
 page_icon=":bar_chart:",
@@ -10,10 +11,9 @@ initial_sidebar_state="expanded")
 df = pd.read_excel(
     io='Digipay_transaksi.xlsx',
     engine='openpyxl',
-    sheet_name='Sheet1',
+    sheet_name='Sheet3',
     skiprows=0,
-    usecols='C:M',
-    nrows=2000
+    nrows=5000
 )
 
 
@@ -23,30 +23,46 @@ st.sidebar.header("Filter Data:")
 
 eselonSatu = st.sidebar.multiselect(
     "Pilih Eselon I: ",
-    options = df["NAMA_ESI"].unique(),
+    options = df["namaeselon"].unique(),
 )
-kppn = st.sidebar.multiselect(
+options_base = df["kppn"].unique()
+options_base = np.insert(options_base,0,"all")
+kppn = st.sidebar.radio(
     "Pilih KPPN: ",
-    options = df["NAMA_KPPN"].unique(),
+    options = options_base,
 )
 satker = st.sidebar.multiselect(
     "Pilih Satker: ",
-    options = df["NAMA_SATKER"].unique()
+    options = df["namasatker"].unique()
 )
-
 bank = st.sidebar.multiselect(
     "Pilih bank: ",
-    options = df["BANK"].unique() 
+    options = df["bank"].unique(), 
 )
-aplikasi_digipay = {'list Bank':{'BRI':'Digipay002', 'MDRI':'Digipay008','BNI':'Digipay009'}}
-df_selection = df.query('NAMA_ESI == @eselonSatu or NAMA_KPPN == @kppn or NAMA_SATKER == @satker or  BANK == @bank')
+
+def getKPPN (kppn):
+    if kppn == 'all':
+        return  ['K E N D A R I' 'K O L A K A' 'R A H A' 'B A U - B A U']
+    else:
+        return df['kppn']
+
+
+df_eselon = df.query('namaeselon== @eselonSatu')
+df_kppn = df.query ('kppn == @kppn')
+df_namasatker = df.query('namasatker == @satker')
+df_bank = df.query('bank == @bank')
+
+df_filter_dynamic = pd.concat([df_bank,df_eselon,df_namasatker,df_kppn],ignore_index=True)
+
+df_selection = df.query('namaeselon == @eselonSatu or kppn == @kppn or namasatker == @satker or bank == @bank')
+
 
 #--MAINPAGE---
 st.title(':bar_chart: Dashboard Digipay')
 st.markdown('##')
 #TOPKPI
-total_nilai_transaksi = int(df_selection["NILAI"].sum())
-jumlah_transaksi = int(df_selection["NILAI"].count())
+total_nilai_transaksi = int(df_selection["nilai"].sum())
+jumlah_transaksi = int(df_selection["nilai"].count())
 accounting_format_nominal = "{:,.2f}".format(total_nilai_transaksi)
 accounting_format_jumlah = "{:,}".format(jumlah_transaksi)
 kolom1 , kolom2 = st.columns(2)
@@ -60,13 +76,18 @@ st.markdown('---')
 
 st.dataframe(df_selection)
 
+
 # nominal_per_kppn = (
-#     df_selection.groupby(by=["KPPN"]).sum()[["NILAI"]].sort_values(by="NILAI")
+#     df_selection.groupby(by=["kppn"]).sum()[["nilai"]].sort_values(by="nilai")
 # )
 # fig_nominal_kppn = px.bar(
 #     nominal_per_kppn,
-#     x="Nilai",
+#     x="nilai",
 #     y=nominal_per_kppn,
+#     orientation="h",
+#     title = "<b>Nominal per KPPN</b>",
+#     color_discrete_sequence=["#0083B8"] * len(nominal_per_kppn),
+#     template = "plotly_white",
     
 # )
 
