@@ -17,45 +17,58 @@ df = pd.read_excel(
 )
 # Functions
 def all_or_classified(input):
-    if input == 'all':
+    if input == 'ALL':
         return df
     else:
         return df_selection
+
+def find_value(input):
+    if input == 'ALL':
+        return df['nilai']
+    else:
+        return df_selection["nilai"]
+
+def options_filter(input):
+    if input =='tahun':
+        return df['tahun'].unique()
+    else:
+        options_base = df[input].unique()
+        options_base = np.insert(options_base,0,"ALL")
+        return options_base
+
+
 
 
 #--Sidebar Filter
 
 st.sidebar.header("Filter Data:")
 
-eselonSatu = st.sidebar.multiselect(
-    "Pilih Eselon I: ",
-    options = df["namaeselon"].unique(),
-)
-options_base = df["kppn"].unique()
-options_base = np.insert(options_base,0,"all")
+# options_base = df["kppn"].unique()
+# options_base = np.insert(options_base,0,"ALL")
 kppn = st.sidebar.radio(
     "Pilih KPPN: ",
-    options = options_base,
+    options = options_filter('kppn'),
 )
 satker = st.sidebar.multiselect(
     "Pilih Satker: ",
     options = df["namasatker"].unique()
 )
-bank = st.sidebar.multiselect(
+# options_base_bank = df["bank"].unique()
+# options_base_bank = np.insert(options_base_bank,0,"ALL")
+bank = st.sidebar.radio(
     "Pilih bank: ",
-    options = df["bank"].unique(), 
+    options = options_filter('bank'), 
+)
+tahun = st.sidebar.radio(
+    "pilih tahun:  ",
+    options = options_filter('tahun'),
 )
 
-
-
-df_eselon = df.query('namaeselon== @eselonSatu')
 df_kppn = df.query ('kppn == @kppn')
 df_namasatker = df.query('namasatker == @satker')
 df_bank = df.query('bank == @bank')
 
-df_filter_dynamic = pd.concat([df_bank,df_eselon,df_namasatker,df_kppn],ignore_index=True)
-
-df_selection = df.query('namaeselon == @eselonSatu or kppn == @kppn or namasatker == @satker or bank == @bank')
+df_selection = df.query('kppn == @kppn or namasatker == @satker or bank == @bank')
 
 
 #--MAINPAGE---
@@ -63,8 +76,8 @@ st.title(':bar_chart: Dashboard Digipay')
 st.markdown('##')
 #TOPKPI
 
-total_nilai_transaksi = int(df_selection["nilai"].sum())
-jumlah_transaksi = int(df_selection["nilai"].count())
+total_nilai_transaksi = int(find_value(kppn).sum())
+jumlah_transaksi = int(find_value(kppn).count())
 accounting_format_nominal = "{:,.2f}".format(total_nilai_transaksi)
 accounting_format_jumlah = "{:,}".format(jumlah_transaksi)
 kolom1 , kolom2 = st.columns(2)
