@@ -15,6 +15,12 @@ df = pd.read_excel(
     skiprows=0,
     nrows=5000
 )
+# Functions
+def all_or_classified(input):
+    if input == 'all':
+        return df
+    else:
+        return df_selection
 
 
 #--Sidebar Filter
@@ -40,11 +46,6 @@ bank = st.sidebar.multiselect(
     options = df["bank"].unique(), 
 )
 
-def getKPPN (kppn):
-    if kppn == 'all':
-        return  ['K E N D A R I' 'K O L A K A' 'R A H A' 'B A U - B A U']
-    else:
-        return df['kppn']
 
 
 df_eselon = df.query('namaeselon== @eselonSatu')
@@ -61,6 +62,7 @@ df_selection = df.query('namaeselon == @eselonSatu or kppn == @kppn or namasatke
 st.title(':bar_chart: Dashboard Digipay')
 st.markdown('##')
 #TOPKPI
+
 total_nilai_transaksi = int(df_selection["nilai"].sum())
 jumlah_transaksi = int(df_selection["nilai"].count())
 accounting_format_nominal = "{:,.2f}".format(total_nilai_transaksi)
@@ -74,7 +76,9 @@ with kolom2:
     st.subheader(str(accounting_format_jumlah) + " Transaksi")
 st.markdown('---')
 
-st.dataframe(df_selection)
+
+
+st.dataframe(all_or_classified(kppn))
 
 
 # nominal_per_kppn = (
