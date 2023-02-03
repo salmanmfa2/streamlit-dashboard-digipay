@@ -45,30 +45,27 @@ st.sidebar.header("Filter Data:")
 
 # options_base = df["kppn"].unique()
 # options_base = np.insert(options_base,0,"ALL")
+st.sidebar.button('Reset Filter', key=None, help=None, on_click=None,)
 kppn = st.sidebar.radio(
     "Pilih KPPN: ",
     options = options_filter('kppn'),
 )
-satker = st.sidebar.multiselect(
-    "Pilih Satker: ",
-    options = df["namasatker"].unique()
-)
+kppn_query = ['Kendari','Kolaka','Baubau','Raha'] if kppn == 'ALL' else kppn
+
 # options_base_bank = df["bank"].unique()
 # options_base_bank = np.insert(options_base_bank,0,"ALL")
 bank = st.sidebar.radio(
     "Pilih bank: ",
     options = options_filter('bank'), 
 )
+bank_query = ['BRI','MDRI','BNI'] if bank == 'ALL' else bank
 tahun = st.sidebar.radio(
     "pilih tahun:  ",
     options = options_filter('tahun'),
 )
+tahun_query = ['2020','2021','2022'] if tahun == 'ALL' else tahun
 
-df_kppn = df.query ('kppn == @kppn')
-df_namasatker = df.query('namasatker == @satker')
-df_bank = df.query('bank == @bank')
-
-df_selection = df.query('kppn == @kppn or namasatker == @satker or bank == @bank')
+df_selection = df.query('kppn == @kppn_query and bank == @bank_query and @tahun_query == tahun' )
 
 
 #--MAINPAGE---
@@ -76,8 +73,8 @@ st.title(':bar_chart: Dashboard Digipay')
 st.markdown('##')
 #TOPKPI
 
-total_nilai_transaksi = int(find_value(kppn).sum())
-jumlah_transaksi = int(find_value(kppn).count())
+total_nilai_transaksi = int(df_selection['nilai'].sum())
+jumlah_transaksi = int(df_selection['nilai'].count())
 accounting_format_nominal = "{:,.2f}".format(total_nilai_transaksi)
 accounting_format_jumlah = "{:,}".format(jumlah_transaksi)
 kolom1 , kolom2 = st.columns(2)
@@ -91,25 +88,20 @@ st.markdown('---')
 
 
 
-st.dataframe(all_or_classified(kppn))
+st.dataframe(df_selection)
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
 
+csv = convert_df(df_selection)
 
-# nominal_per_kppn = (
-#     df_selection.groupby(by=["kppn"]).sum()[["nilai"]].sort_values(by="nilai")
-# )
-# fig_nominal_kppn = px.bar(
-#     nominal_per_kppn,
-#     x="nilai",
-#     y=nominal_per_kppn,
-#     orientation="h",
-#     title = "<b>Nominal per KPPN</b>",
-#     color_discrete_sequence=["#0083B8"] * len(nominal_per_kppn),
-#     template = "plotly_white",
-    
-# )
-
-
-
+st.download_button(
+    label="Download data as XLSX",
+    data=csv,
+    file_name='digipay.xlsx',
+    mime='application/vnd.ms-excel',
+)
 
 hide_st_style = """
             <style>
