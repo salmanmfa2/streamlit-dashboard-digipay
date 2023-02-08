@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import numpy as np
+from io import BytesIO
 
 st.set_page_config(page_title="Dashboard Digipay",
 page_icon=":bar_chart:",
@@ -16,18 +17,6 @@ df = pd.read_excel(
     nrows=5000
 )
 # Functions
-def all_or_classified(input):
-    if input == 'ALL':
-        return df
-    else:
-        return df_selection
-
-def find_value(input):
-    if input == 'ALL':
-        return df['nilai']
-    else:
-        return df_selection["nilai"]
-
 def options_filter(input):
     if input =='tahun':
         return df['tahun'].unique()
@@ -35,6 +24,18 @@ def options_filter(input):
         options_base = df[input].unique()
         options_base = np.insert(options_base,0,"ALL")
         return options_base
+
+def to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
 
 
 
@@ -61,9 +62,9 @@ bank = st.sidebar.radio(
 bank_query = ['BRI','MDRI','BNI'] if bank == 'ALL' else bank
 tahun = st.sidebar.radio(
     "pilih tahun:  ",
-    options = options_filter('tahun'),
+    options = [2020,2021,2022,2023,'ALL'],
 )
-tahun_query = ['2020','2021','2022'] if tahun == 'ALL' else tahun
+tahun_query = [2020,2021,2022,2023] if tahun == 'ALL' else tahun
 
 df_selection = df.query('kppn == @kppn_query and bank == @bank_query and @tahun_query == tahun' )
 
@@ -86,22 +87,22 @@ with kolom2:
     st.subheader(str(accounting_format_jumlah) + " Transaksi")
 st.markdown('---')
 
-
-
 st.dataframe(df_selection)
-@st.cache
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv().encode('utf-8')
 
-csv = convert_df(df_selection)
+st.markdown("""
+<style>
+.big-font {
+    font-size:300px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+st.subheader('Unduh File: ')
+df_xlsx = to_excel(df_selection)
+st.download_button(label='Xlsx',
+                                data=df_xlsx ,
+                                file_name= 'download.xlsx')
 
-st.download_button(
-    label="Download data as XLSX",
-    data=csv,
-    file_name='digipay.xlsx',
-    mime='application/vnd.ms-excel',
-)
+
 
 hide_st_style = """
             <style>
