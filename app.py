@@ -10,13 +10,14 @@ layout ="wide",
 initial_sidebar_state="expanded")
 
 df = pd.read_excel(
-    io='Digipay_transaksi.xlsx',
+    io='.\Assets\Digipay_transaksi.xlsx',
     engine='openpyxl',
     sheet_name='Sheet3',
     skiprows=0,
     nrows=5000
 )
 # Functions
+@st.cache
 def options_filter(input):
     if input =='tahun':
         return df['tahun'].unique()
@@ -37,7 +38,9 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
 
 
 #--Sidebar Filter
@@ -98,9 +101,29 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.subheader('Unduh File: ')
 df_xlsx = to_excel(df_selection)
-st.download_button(label='Xlsx',
+df_csv = convert_df(df_selection)
+
+kolom1, kolom2, kolom3, kolom4, kolom5,kolom6,kolom7,kolom8,kolom9 = st.columns(9, gap = "large")
+with kolom1:
+    st.download_button(label='Xlsx',
                                 data=df_xlsx ,
                                 file_name= 'download.xlsx')
+with kolom2:
+    st.download_button(
+    label="CSV",
+    data=df_csv,
+    file_name='download.csv',
+    mime='text/csv',)
+
+with kolom3:
+    st.download_button(label="Generate Laporan (Pdf)",
+    data = df_csv,
+     file_name='laporan.pdf',
+     mime='text/pdf')
+
+
+
+
 
 
 
